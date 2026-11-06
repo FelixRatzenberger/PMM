@@ -1,0 +1,161 @@
+==========================================================
+ PMM - WIEDERHOLUNG
+ Stand: 23.10.2026 (Stoff bis inkl. 16.10.2026)
+==========================================================
+
+1. SETUP & WERKZEUGE
+----------------------------------------------------------
+- Installation per winget: Git, VS Code, R, RStudio, Node.js
+- GitHub-Account + eigenes Repo, klonen, in VS Code oeffnen
+- Einmalig:  install.packages(c("tidyverse", "palmerpenguins"))
+- Kontrolle:  glimpse(penguins)
+  -> 344 Zeilen (Beobachtungen), 8 Spalten
+- library(tidyverse)      laedt ein installiertes Paket (ohne Anfuehrungszeichen)
+- install.packages(...)   nur einmalig zum Installieren
+- Abgabe per Git:  git add / git commit / git push
+
+
+2. R-GRUNDLAGEN
+----------------------------------------------------------
+x <- c(2, 4, 4, 5, 7)   Zuweisung mit <-, c() baut einen Vektor
+read.csv()              CSV einlesen: 1. Zeile = Ueberschrift,
+                        jede weitere Zeile = eine Beobachtung
+summary(), glimpse()    schneller Datenueberblick
+na.rm = TRUE            entfernt fehlende Werte (NA) vor der Rechnung
+|>   bzw.   %>%         Pipe: Daten "durchleiten"
+
+
+3. DESKRIPTIVE STATISTIK
+----------------------------------------------------------
+mean()      Mittelwert
+median()    Median
+sd()        Standardabweichung
+var()       Varianz
+IQR()       Interquartilsabstand
+quantile()  Quantile
+
+Varianz vs. Standardabweichung:
+- var = mittlere quadratische Abweichung
+- sd  = sqrt(var), hat dieselbe Einheit wie die Daten
+- Warum n-1? Bei einer Stichprobe wird durch n-1 geteilt
+  (Bessel-Korrektur), damit der Schaetzer unverzerrt ist.
+  Bei der Grundgesamtheit teilt man durch n.
+
+Parameter  = wahrer, unbekannter Wert
+Schaetzwert = aus der Stichprobe berechnet
+
+
+4. WAHRSCHEINLICHKEIT & VERTEILUNGEN
+----------------------------------------------------------
+
+4.1 Binomialkoeffizient "n ueber k"
+------------------------------------
+- zaehlt die WEGE mit genau k Erfolgen unter n Versuchen
+- Reihenfolge egal -> ungeordnete Auswahl
+- Formel:  n ueber k = n! / (k! * (n-k)!)
+- in R:    choose(n, k)
+- Beispiel: choose(45, 6) = 8.145.060  (Lotto "6 aus 45")
+
+Pascalsches Dreieck:
+  n=0:              1
+  n=1:            1   1
+  n=2:          1   2   1
+  n=3:        1   3   3   1
+  n=4:      1   4   6   4   1
+  n=5:    1   5  10  10   5   1
+- Zahl an Position k in Zeile n = (n ueber k)
+- Regel: zwei Zahlen darueber addieren
+- Zeilensumme = 2^n
+- Symmetrie: (n ueber k) = (n ueber n-k)
+
+4.2 Binomialverteilung
+------------------------------------
+Voraussetzung: n unabhaengige Versuche, gleiche
+Erfolgswahrscheinlichkeit p.
+
+  P(X = k) = (n ueber k) * p^k * (1-p)^(n-k)
+
+- "Defekt" ist hier der ERFOLG -> p = Ausschussquote
+- Beispiel: n = 5, p = 0.2, genau 2 defekt:
+  choose(5,2) * 0.2^2 * 0.8^3 = 0.2048   (ca. 20,4 %)
+- Alle Wahrscheinlichkeiten zusammen = 1:
+  sum(dbinom(0:n, size = n, prob = p)) = 1
+
+4.3 R-Funktionen: d / p / q / r
+------------------------------------
+dbinom(k, size, prob)      P(X = k)     genau k
+pbinom(k, size, prob)      P(X <= k)    hoechstens k (kumuliert)
+choose(n, k)               nur der Koeffizient (n ueber k)
+pnorm(x, mean, sd)         Normalverteilung: Flaeche links von x
+qnorm(p, mean, sd)         Normalverteilung: Quantil zu p
+dpois(k, lambda)           Poisson: genau k
+dbinom(0:20, 20, 0.05)     ganze Verteilung auf einmal
+
+Merke:
+  d = ein Wert (Dichte / Punktwahrscheinlichkeit)
+  p = alles bis zu diesem Wert aufsummiert
+  q = Quantil (umgekehrt zu p)
+  r = Zufallszahlen
+
+4.4 Form der Verteilung
+------------------------------------
+- kleines p -> rechtsschiefe Verteilung
+  (hoechste Wahrscheinlichkeiten links, schneller Abfall nach rechts)
+- barplot(dbinom(0:20, 20, 0.05)) zeichnet die ganze Verteilung
+
+4.5 Sonderfall (0 ueber 0)
+------------------------------------
+(0 ueber 0) = 1, weil es genau EINEN Weg gibt, 0 Schritte zu gehen.
+
+
+5. GRAFIK
+----------------------------------------------------------
+- geom_histogram  -> stetige Merkmale
+- geom_bar        -> kategoriale Merkmale
+  (haeufiger Fehler: Histogramm auf Kategorien)
+- Boxplot: Median, Quartile, Ausreisser ueber 1.5 * IQR
+- QQ-Plot: prueft die Normalannahme
+- Aufbau ggplot:
+    ggplot(daten, aes(x = spalte)) + geom_...
+
+
+6. TYPISCHE FEHLER (PRUEFUNGSFALLEN)
+----------------------------------------------------------
+1) d und p vertauscht
+   dbinom = genau k, pbinom = hoechstens k
+2) Exponent vergessen
+   Erfolge: k, Misserfolge: n-k (nicht k)
+   richtig: choose(5,2) * 0.2^2 * 0.8^3
+3) ungeordnet mit geordnet verwechselt
+   n*(n-1)*... ist um den Faktor k! zu gross
+4) NA ohne na.rm = TRUE -> Ergebnis ist NA
+
+
+7. 5-MINUTEN-SELBSTCHECK
+----------------------------------------------------------
+1) choose(6, 2) = ?
+   -> 15
+
+2) P(genau 2 defekt) bei n = 5, p = 0.2?
+   -> 0.2048
+
+3) P(hoechstens 2 defekt) bei n = 5, p = 0.2?
+   -> pbinom(2, 5, 0.2) = 0.94208
+
+4) n = 20, p = 0.05: P(0), P(1), P(2), P(3)?
+   -> 0.358 / 0.377 / 0.189 / 0.060
+
+5) Was ist (0 ueber 0) und warum?
+   -> 1, ein einziger Weg mit 0 Schritten
+
+
+8. NOCH NICHT BEHANDELT
+----------------------------------------------------------
+- hypergeometrische Verteilung (Ziehen ohne Zuruecklegen, KM5-03)
+- Poisson-Verteilung
+- Konfidenzintervalle (UE 5)
+
+
+==========================================================
+ Merksatz:  zaehlen * gewichten = Verteilung
+==========================================================
